@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>一起玩吧</title>
+    <style>
+        body {
+            background-color: #000;
+            color: #d1d1d1;
+            font-family: "Courier New", monospace;
+            text-align: center;
+            padding-top: 100px;
+            background-image: radial-gradient(circle at 50% 50%, #1a1a1a, #000 90%);
+            overflow: hidden;
+            height: 100vh;
+            transition: background 1s ease, color 1s ease;
+        }
+
+        h1 {
+            color: #8b0000;
+            text-shadow: 0 0 15px #ff0000;
+            animation: flicker 2s infinite;
+            letter-spacing: 2px;
+        }
+
+        @keyframes flicker {
+            0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
+            20%, 24%, 55% { opacity: 0.2; }
+        }
+
+        button {
+            background: #111;
+            border: 1px solid #333;
+            color: #ccc;
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 18px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #8b0000;
+            box-shadow: 0 0 10px #8b0000;
+        }
+
+        #intro, #game, #glitch {
+            transition: opacity 1s ease;
+        }
+
+        #result, #loseCount {
+            margin-top: 30px;
+            font-size: 22px;
+            color: #ff3333;
+        }
+
+        #glitch {
+            font-size: 20px;
+            color: #b30000;
+            white-space: pre-wrap;
+            word-break: break-all;
+            animation: glitch 0.12s infinite;
+        }
+
+        @keyframes glitch {
+            0% { transform: translate(1px, 1px); }
+            25% { transform: translate(-1px, -2px); }
+            50% { transform: translate(-3px, 1px); }
+            75% { transform: translate(3px, 2px); }
+            100% { transform: translate(1px, -1px); }
+        }
+    </style>
+</head>
+<body>
+<div id="intro">
+    <h1>殷悦……和我一起玩个游戏吗？</h1>
+    <button id="yesBtn" onclick="confirmPlay()">玩!</button>
+    <button id="noBtn" onclick="refusePlay()">谁啊你</button>
+</div>
+
+<audio id="bgm" src="resources/bgm.mp3" preload="auto" loop></audio>
+
+<div id="game" style="display:none;">
+    <h1>剪刀 · 石头 · 布</h1>
+    <button onclick="play('剪刀')">✂ 剪刀</button>
+    <button onclick="play('石头')">🪨 石头</button>
+    <button onclick="play('布')">📜 布</button>
+    <div id="result"></div>
+    <div id="loseCount"></div>
+</div>
+
+<div id="glitch"></div>
+
+<script>
+    let loseTimes = 0;
+    let noClicks = 0;
+    let bgmStarted = false; // 防止重复播放
+
+    function startBGM() {
+        if (!bgmStarted) {
+            const bgm = document.getElementById('bgm');
+            bgm.volume = 0.6;
+            bgm.play().catch(e => console.log("无法播放音频:", e));
+            bgmStarted = true;
+        }
+    }
+
+    // ---------- 前置阶段 ----------
+    function refusePlay() {
+        startBGM(); // 第一次点击（无论选什么）就播放BGM
+        noClicks++;
+        const noBtn = document.getElementById('noBtn');
+        const yesBtn = document.getElementById('yesBtn');
+        const title = document.querySelector('#intro h1');
+
+        if (noClicks === 1) {
+            title.textContent = "确定吗？";
+            noBtn.textContent = "确定不玩";
+        } else if (noClicks === 2) {
+            title.textContent = "殷悦……不玩也没关系。";
+            document.body.style.background = "#050505";
+            noBtn.textContent = "不玩!";
+            yesBtn.textContent = "……那就玩一把?";
+        } else if (noClicks === 3) {
+            title.textContent = "你...已...经...无...法...回...头......";
+            noBtn.style.opacity = "0.5";
+            document.body.style.background = "#000";
+            document.body.style.color = "#a00";
+        } else if (noClicks === 4) {
+            title.textContent = "一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧";
+            noBtn.style.display = "none";
+            yesBtn.textContent = "一起玩吧";
+            yesBtn.style.background = "#600";
+            yesBtn.style.color = "#fff";
+        }
+    }
+
+    function confirmPlay() {
+        startBGM(); // 点击“要玩”时也能触发播放
+        document.getElementById('intro').style.display = 'none';
+        document.getElementById('game').style.display = 'block';
+    }
+
+    // ---------- 游戏逻辑 ----------
+    function play(player) {
+        const choices = ['剪刀', '石头', '布'];
+        const computer = choices[Math.floor(Math.random() * 3)];
+        let result = '';
+
+        if (player === computer) {
+            result = `殷悦出了${player}，对面出了${computer} —— 平局。`;
+        } else if (
+            (player === '剪刀' && computer === '布') ||
+            (player === '石头' && computer === '剪刀') ||
+            (player === '布' && computer === '石头')
+        ) {
+            result = `殷悦出了${player}，对面出了${computer} —— 她赢了。`;
+        } else {
+            loseTimes++;
+            result = `殷悦出了${player}，对面出了${computer} —— 她输了。`;
+        }
+
+        document.getElementById('result').textContent = result;
+        document.getElementById('loseCount').textContent = `失败次数：${loseTimes}/3`;
+
+        if (loseTimes >= 3) {
+            collapseScreen();
+        }
+    }
+
+    // ---------- 崩溃阶段 ----------
+    function collapseScreen() {
+        document.getElementById('game').style.display = 'none';
+        const glitch = document.getElementById('glitch');
+        const chars = "█▓▒░▐▌▖▗▘▙▚▛▜▝▞▟#@!$%^&*()_+=-~<>?abcdefghijklmnopqrstuvwxyz";
+        let garbled = '';
+        let i = 0;
+
+        const interval = setInterval(() => {
+            garbled += chars[Math.floor(Math.random() * chars.length)];
+            glitch.textContent = garbled;
+            i++;
+            if (i > 1200) {
+                clearInterval(interval);
+                document.body.style.background = "#000";
+                glitch.style.fontSize = "28px";
+                glitch.textContent = "(一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧一起玩吧\n\n你逃不掉了:)。";
+            }
+        }, 5);
+    }
+</script>
+</body>
+</html>
